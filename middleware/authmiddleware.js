@@ -1,30 +1,30 @@
-// middleware/authMiddleware.js
-const jwt = require("jsonwebtoken");
+// routes/authRoutes.js
+const express = require("express");
+const router = express.Router();
+const pool = require("../db");
 
-function auth(requiredRole) {
-  return (req, res, next) => {
-    const header = req.headers.authorization;
-    if (!header || !header.startsWith("Bearer ")) {
-      return res.status(401).json({ message: "No token provided" });
-    }
+// Insert a user with just a name
+router.post("/add-name", async (req, res) => {
+  const { name } = req.body;
 
-    const token = header.split(" ")[1];
+  if (!name) {
+    return res.status(400).json({ error: "Name is required" });
+  }
 
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      req.user = decoded;
+  try {
+    const result = await pool.query(
+      "INSERT INTO users (name) VALUES ($1) RETURNING *",
+      [name]
+    );
 
-      if (requiredRole && decoded.role !== requiredRole) {
-        return res.status(403).json({ message: "Forbidden" });
-      }
+    res.json({
+      message: "User inserted successfully",
+      user: result.rows[0]
+    });
+  } catch (err) {
+    console.error("Insert error:", err);
+    res.status(500).json({ error: "Database insert failed" });
+  }
+});
 
-      next();
-    } catch (err) {
-      return res.status(401).json({ message: "Invalid token" });
-    }
-  };
-}
-
-module.exports = auth;
-
-
+module.exports = router;

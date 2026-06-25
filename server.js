@@ -8,10 +8,18 @@ const workspaceRoutes = require("./routes/workspaceRoutes");
 
 const app = express();
 
-app.use(cors());
-app.use(express.json());
+// FIXED CORS — only ONE declaration
+app.use(cors({
+    origin: ["http://127.0.0.1:5500", "http://localhost:5500"],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+}));
 
-// Main App Routes
+// FIXED JSON LIMIT (Base64 images)
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ limit: "10mb", extended: true }));
+
+// Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/properties", propertyRoutes);
 app.use("/api/workspaces", workspaceRoutes);
